@@ -81,7 +81,7 @@ services:
   registry:
     #image: library/registry:2.3.1
     image: library/registry:2.6
-    command: sh /srv/Portus/examples/compose/registry/init
+    command: sh /srv/Portus/for-self-crt/registry/init
     environment:
       REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /registry_data
       REGISTRY_STORAGE_DELETE_ENABLED: "true"

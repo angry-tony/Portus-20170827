@@ -31,7 +31,6 @@ services:
     volumes:
       - ./secrets:/certificates:ro
       - static:/srv/Portus/public
-      - ./config-local.yml:/config-local.yml:ro
       - ./crono_portus_init:/init:ro
       - ./config-local.yml:/srv/Portus/config/config.yml
 
@@ -58,7 +57,6 @@ services:
       - db
     volumes:
       - ./secrets:/certificates:ro
-      - ./config-local.yml:/config-local.yml:ro
       - ./crono_portus_init:/init:ro
       - ./config-local.yml:/srv/Portus/config/config.yml
 
