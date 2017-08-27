@@ -2,6 +2,8 @@
 
 set -x
 
-cp /secrets/portus.crt /usr/local/share/ca-certificates
+echo '192.0.220.105    pdr-01' >> /etc/hosts
+cp /etc/docker/registry/portus.crt /usr/local/share/ca-certificates
+cp /etc/docker/registry/portus-CA.crt /usr/local/share/ca-certificates
 update-ca-certificates
 registry serve /etc/docker/registry/config.yml

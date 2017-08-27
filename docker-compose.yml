@@ -3,7 +3,8 @@ version: '2'
 services:
   portus:
     build: .
-    image: opensuse/portus:development
+    #image: opensuse/portus:development
+    image: opensuse/portus:production
     command: bash /srv/Portus/examples/development/compose/init
     environment:
       - PORTUS_MACHINE_FQDN_VALUE=${MACHINE_FQDN}
@@ -11,6 +12,16 @@ services:
 
       - PORTUS_DB_HOST=db
       - PORTUS_DB_PASSWORD=portus
+      ## START
+      # Secrets. It can possibly be handled better with Swarm's secrets.
+      - PORTUS_SECRET_KEY_BASE=${SECRET_KEY_BASE}
+      - PORTUS_KEY_PATH=/certificates/portus.key
+      - PORTUS_PASSWORD=${PORTUS_PASSWORD}
+
+      # SSL
+      - PORTUS_PUMA_TLS_KEY=/certificates/portus.key
+      - PORTUS_PUMA_TLS_CERT=/certificates/portus.crt
+      ## END
 
       - RAILS_SERVE_STATIC_FILES=true
     ports:
@@ -19,9 +30,15 @@ services:
       - db
     volumes:
       - .:/srv/Portus
+      ## START
+      - ./examples/development/compose/portus.crt:/certificates/portus.crt:ro
+      - ./examples/development/compose/portus-CA.crt:/certificates/portus-CA.crt:ro
+      - ./examples/development/compose/portus.key:/certificates/portus.key:ro
+      ## END
 
   crono:
-    image: opensuse/portus:development
+    #image: opensuse/portus:development
+    image: opensuse/portus:production
     command: ./bin/crono
     depends_on:
       - portus
@@ -30,8 +47,18 @@ services:
 
       - PORTUS_DB_HOST=db
       - PORTUS_DB_PASSWORD=portus
+      ## START
+      - PORTUS_SECRET_KEY_BASE=${SECRET_KEY_BASE}
+      - PORTUS_KEY_PATH=/certificates/portus.key
+      - PORTUS_PASSWORD=${PORTUS_PASSWORD}
+      ## END
     volumes:
       - .:/srv/Portus
+      ## START
+      - ./examples/development/compose/portus.crt:/certificates/portus.crt:ro
+      - ./examples/development/compose/portus-CA.crt:/certificates/portus-CA.crt:ro
+      - ./examples/development/compose/portus.key:/certificates/portus.key:ro
+      ## END
     links:
       - db
 
@@ -41,36 +68,54 @@ services:
     working_dir: /srv/Portus
     volumes:
       - .:/srv/Portus
+      ## START
+      - ./examples/development/compose/portus.crt:/certificates/portus.crt:ro
+      - ./examples/development/compose/portus-CA.crt:/certificates/portus-CA.crt:ro
+      ## END
 
   db:
     image: library/mariadb:10.0.23
     environment:
-      MYSQL_ROOT_PASSWORD: portus
+      MYSQL_ROOT_PASSWORD: ${DATABASE_PASSWORD}
 
   registry:
-    image: library/registry:2.3.1
+    #image: library/registry:2.3.1
+    image: library/registry:2.6
+    command: sh /srv/Portus/examples/compose/registry/init
     environment:
       REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /registry_data
       REGISTRY_STORAGE_DELETE_ENABLED: "true"
 
       REGISTRY_HTTP_ADDR: 0.0.0.0:5000
       REGISTRY_HTTP_DEBUG_ADDR: 0.0.0.0:5001
+      ## START
+      # SSL
+      REGISTRY_HTTP_TLS_CERTIFICATE: /etc/docker/registry/portus.crt
+      REGISTRY_HTTP_TLS_KEY: /etc/docker/registry/portus.key
+      # HTTP SECRET KEY
+      REGISTRY_HTTP_SECRET: ${SECRET_KEY_BASE}
+      ## END
 
       REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE: /etc/docker/registry/portus.crt
 
-      REGISTRY_AUTH_TOKEN_REALM: http://${MACHINE_FQDN}:3000/v2/token
+      REGISTRY_AUTH_TOKEN_REALM: https://${MACHINE_FQDN}:3000/v2/token
       REGISTRY_AUTH_TOKEN_SERVICE: ${MACHINE_FQDN}:${REGISTRY_PORT}
       REGISTRY_AUTH_TOKEN_ISSUER: ${MACHINE_FQDN}
 
       REGISTRY_NOTIFICATIONS_ENDPOINTS: >
         - name: portus
-          url: http://${MACHINE_FQDN}:3000/v2/webhooks/events
+          url: https://${MACHINE_FQDN}:3000/v2/webhooks/events
           timeout: 2000ms
           threshold: 5
           backoff: 1s
     volumes:
       - /registry_data
       - ./examples/development/compose/portus.crt:/etc/docker/registry/portus.crt:ro
+      ## START
+      - ./examples/development/compose/portus-CA.crt:/etc/docker/registry/portus-CA.crt:ro
+      - ./examples/development/compose/portus.key:/etc/docker/registry/portus.key:ro
+      - .:/srv/Portus
+      ## END
     ports:
       - ${REGISTRY_PORT}:5000
       - 5001:5001

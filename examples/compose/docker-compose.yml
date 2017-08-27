@@ -31,10 +31,14 @@ services:
     volumes:
       - ./secrets:/certificates:ro
       - static:/srv/Portus/public
+      - ./config-local.yml:/config-local.yml:ro
+      - ./crono_portus_init:/init:ro
+      - ./config-local.yml:/srv/Portus/config/config.yml
 
   crono:
     image: opensuse/portus:head
     environment:
+      PORTUS_LOCAL_CONFIG_PATH: /config-local.yml
       PORTUS_MACHINE_FQDN_VALUE: ${MACHINE_FQDN}
 
       # DB. The password for the database should definitely not be here. You are
@@ -54,6 +58,9 @@ services:
       - db
     volumes:
       - ./secrets:/certificates:ro
+      - ./config-local.yml:/config-local.yml:ro
+      - ./crono_portus_init:/init:ro
+      - ./config-local.yml:/srv/Portus/config/config.yml
 
   db:
     image: library/mariadb:10.0.23
