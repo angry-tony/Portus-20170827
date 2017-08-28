@@ -20,7 +20,7 @@ if stat /usr/sbin/portusctl &> /dev/null; then
 else
     # <number>.<hours/minutes/seconds>. For example: “2.minutes”, “10.seconds”, “1.hours”.
     # CATALOG_CRON="2.minutes" bundle exec crono
-    export CATALOG_CRON="10.seconds"
+    export CATALOG_CRON="2.minutes"
     cmd_prefix="bundle exec"
 fi
 
