@@ -37,7 +37,6 @@ services:
   crono:
     image: opensuse/portus:head
     environment:
-      PORTUS_LOCAL_CONFIG_PATH: /config-local.yml
       PORTUS_MACHINE_FQDN_VALUE: ${MACHINE_FQDN}
 
       # DB. The password for the database should definitely not be here. You are
@@ -58,6 +57,7 @@ services:
     volumes:
       - ./secrets:/certificates:ro
       - ./crono_portus_init:/init:ro
+      - ./crono.exec:/srv/Portus/bin/crono:ro
       - ./config-local.yml:/srv/Portus/config/config.yml
 
   db:
@@ -74,15 +74,19 @@ services:
     image: library/registry:2.6
     command: ["/bin/sh", "/etc/docker/registry/init"]
     environment:
+      REGISTRY_STORAGE_DELETE_ENABLED: "true"
       # Authentication
       REGISTRY_AUTH_TOKEN_REALM: https://${MACHINE_FQDN}/v2/token
       REGISTRY_AUTH_TOKEN_SERVICE: ${MACHINE_FQDN}
       REGISTRY_AUTH_TOKEN_ISSUER: ${MACHINE_FQDN}
-      REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE: /secrets/portus.crt
+      REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE: /certificates/portus.crt
+      REGISTRY_HTTP_SECRET: ${SECRET_KEY_BASE}
 
       # SSL
-      REGISTRY_HTTP_TLS_CERTIFICATE: /secrets/portus.crt
-      REGISTRY_HTTP_TLS_KEY: /secrets/portus.key
+      #REGISTRY_HTTP_TLS_CERTIFICATE: /secrets/portus.crt
+      #REGISTRY_HTTP_TLS_KEY: /secrets/portus.key
+      REGISTRY_HTTP_TLS_CERTIFICATE: /certificates/portus.crt
+      REGISTRY_HTTP_TLS_KEY: /certificates/portus.key
 
       # Portus endpoint
       REGISTRY_NOTIFICATIONS_ENDPOINTS: >
@@ -93,7 +97,8 @@ services:
           backoff: 1s
     volumes:
       - /var/lib/portus/registry:/var/lib/registry:shared #on HOST , mount -t nfs bootstrap-ldap-nfs-01:/home/dbdata /var/lib/portus/registry
-      - ./secrets:/secrets:ro
+      - ./secrets:/certificates:ro
+      #- ./secrets:/secrets:ro
       - ./registry/config.yml:/etc/docker/registry/config.yml:ro
       - ./registry/init:/etc/docker/registry/init:ro
     ports:
