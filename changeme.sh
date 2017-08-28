@@ -3,6 +3,8 @@ mount -t nfs NFSSERVER-IP:/EXPORT-DIR /var/lib/portus/registry
 
 mkdir /var/lib/portus/mariadb/BACKUP
 
+examples/development/compose/create-crt.sh
+
 # cronos
 sed -i 's/192.0.220.105    pdr-01/192.268.0.0     hoho/g' ~/Portus-20170827/bin/crono
 
