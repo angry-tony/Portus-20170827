@@ -24,7 +24,7 @@ DATE=`date +"%Y%m%d%H%M%S"`
 USERNAME="root"
 PASSWORD="portus12341234"
 
-mysqldump -u$USERNAME --all-databases > /var/lib/portus/mariadb/BACKUP/backup.${DATE}.sql
+docker exec portus20170827_db_1 mysqldump -u${USERNAME} -p${PASSWORD} --all-databases > /var/lib/portus/mariadb/BACKUP/backup.${DATE}.sql
 EOF
 
 chmod 755 /root/HPE/mysqldump.sh
