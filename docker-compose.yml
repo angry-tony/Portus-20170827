@@ -3,27 +3,28 @@ version: '2'
 services:
   portus:
     build: .
-    #image: opensuse/portus:development
-    image: opensuse/portus:production
+    image: opensuse/portus:development
     command: bash /srv/Portus/examples/development/compose/init
     environment:
-      - PORTUS_MACHINE_FQDN_VALUE=${MACHINE_FQDN}
-      - PORTUS_PUMA_HOST=0.0.0.0:3000
+      PORTUS_MACHINE_FQDN_VALUE: ${MACHINE_FQDN}
+      PORTUS_PUMA_HOST: 0.0.0.0:3000
 
-      - PORTUS_DB_HOST=db
-      - PORTUS_DB_PASSWORD=portus
+      PORTUS_PRODUCTION_DATABASE: portus_production
+
+      PORTUS_DB_HOST: db
+      PORTUS_DB_PASSWORD: ${DATABASE_PASSWORD}
       ## START
       # Secrets. It can possibly be handled better with Swarm's secrets.
-      - PORTUS_SECRET_KEY_BASE=${SECRET_KEY_BASE}
-      - PORTUS_KEY_PATH=/certificates/portus.key
-      - PORTUS_PASSWORD=${PORTUS_PASSWORD}
+      PORTUS_SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      PORTUS_KEY_PATH: /certificates/portus.key
+      PORTUS_PASSWORD: ${PORTUS_PASSWORD}
 
       # SSL
-      - PORTUS_PUMA_TLS_KEY=/certificates/portus.key
-      - PORTUS_PUMA_TLS_CERT=/certificates/portus.crt
+      PORTUS_PUMA_TLS_KEY: /certificates/portus.key
+      PORTUS_PUMA_TLS_CERT: /certificates/portus.crt
       ## END
 
-      - RAILS_SERVE_STATIC_FILES=true
+      RAILS_SERVE_STATIC_FILES: true
     ports:
       - 3000:3000
     links:
@@ -37,20 +38,20 @@ services:
       ## END
 
   crono:
-    #image: opensuse/portus:development
-    image: opensuse/portus:production
+    image: opensuse/portus:development
     command: ./bin/crono
     depends_on:
       - portus
     environment:
-      - PORTUS_MACHINE_FQDN_VALUE=${MACHINE_FQDN}
+      PORTUS_MACHINE_FQDN_VALUE: ${MACHINE_FQDN}
 
-      - PORTUS_DB_HOST=db
-      - PORTUS_DB_PASSWORD=portus
+      PORTUS_DB_HOST: db
+      PORTUS_PRODUCTION_DATABASE: portus_production
+      PORTUS_DB_PASSWORD: ${DATABASE_PASSWORD}
       ## START
-      - PORTUS_SECRET_KEY_BASE=${SECRET_KEY_BASE}
-      - PORTUS_KEY_PATH=/certificates/portus.key
-      - PORTUS_PASSWORD=${PORTUS_PASSWORD}
+      PORTUS_SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      PORTUS_KEY_PATH: /certificates/portus.key
+      PORTUS_PASSWORD: ${PORTUS_PASSWORD}
       ## END
     volumes:
       - .:/srv/Portus
@@ -76,7 +77,12 @@ services:
   db:
     image: library/mariadb:10.0.23
     environment:
+      MYSQL_DATABASE: portus_production
+
+      # Again, the password shouldn't be handled like this.
       MYSQL_ROOT_PASSWORD: ${DATABASE_PASSWORD}
+    volumes:
+      - /var/lib/portus/mariadb:/var/lib/mysql
 
   registry:
     #image: library/registry:2.3.1
@@ -109,7 +115,7 @@ services:
           threshold: 5
           backoff: 1s
     volumes:
-      - /registry_data
+      - /var/lib/portus/registry:/registry_data:shared #on HOST , mount -t nfs bootstrap-ldap-nfs-01:/home/dbdata /var/lib/portus/registry
       - ./examples/development/compose/portus.crt:/etc/docker/registry/portus.crt:ro
       ## START
       - ./examples/development/compose/portus-CA.crt:/etc/docker/registry/portus-CA.crt:ro
