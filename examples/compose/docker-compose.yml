@@ -92,7 +92,7 @@ services:
           threshold: 5
           backoff: 1s
     volumes:
-      - /var/lib/portus/registry:/var/lib/registry
+      - /var/lib/portus/registry:/var/lib/registry:shared #on HOST , mount -t nfs bootstrap-ldap-nfs-01:/home/dbdata /var/lib/portus/registry
       - ./secrets:/secrets:ro
       - ./registry/config.yml:/etc/docker/registry/config.yml:ro
       - ./registry/init:/etc/docker/registry/init:ro
