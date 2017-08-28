@@ -24,7 +24,7 @@ services:
       PORTUS_PUMA_TLS_CERT: /certificates/portus.crt
       ## END
 
-      RAILS_SERVE_STATIC_FILES: true
+      RAILS_SERVE_STATIC_FILES: 'true'
     ports:
       - 3000:3000
     links:
