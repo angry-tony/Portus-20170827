@@ -18,21 +18,17 @@ services:
       PORTUS_PASSWORD: ${PORTUS_PASSWORD}
 
       # SSL
-      PORTUS_PUMA_TLS_KEY: /certificates/portus.key
-      PORTUS_PUMA_TLS_CERT: /certificates/portus.crt
+      PORTUS_CHECK_SSL_USAGE_ENABLED: 'false'
 
-      # NGinx is serving the assets instead of Puma. If you want to change this,
-      # uncomment this line.
-      #RAILS_SERVE_STATIC_FILES: 'true'
+      # Since we have no nginx in insecure mode, portus have to
+      # serve the static files
+      RAILS_SERVE_STATIC_FILES: 'true'
     ports:
       - 3000:3000
     links:
       - db
     volumes:
       - ./secrets:/certificates:ro
-      - static:/srv/Portus/public
-      - ./hosts-file/portus.init.file:/init:ro
-      - ./hosts-file/config.yml:/srv/Portus/config/config.yml:ro
 
   crono:
     image: opensuse/portus:head
@@ -56,8 +52,6 @@ services:
       - db
     volumes:
       - ./secrets:/certificates:ro
-      - ./hosts-file/crono.file:/srv/Portus/bin/crono:ro
-      - ./hosts-file/config.yml:/srv/Portus/config/config.yml:ro
 
   db:
     image: library/mariadb:10.0.23
@@ -71,22 +65,17 @@ services:
 
   registry:
     image: library/registry:2.6
-    command: ["/bin/sh", "/etc/docker/registry/init"]
     environment:
       # Authentication
-      REGISTRY_AUTH_TOKEN_REALM: https://${MACHINE_FQDN}/v2/token
-      REGISTRY_AUTH_TOKEN_SERVICE: ${MACHINE_FQDN}
+      REGISTRY_AUTH_TOKEN_REALM: http://${MACHINE_FQDN}:3000/v2/token
+      REGISTRY_AUTH_TOKEN_SERVICE: ${MACHINE_FQDN}:5000
       REGISTRY_AUTH_TOKEN_ISSUER: ${MACHINE_FQDN}
       REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE: /secrets/portus.crt
-
-      # SSL
-      REGISTRY_HTTP_TLS_CERTIFICATE: /secrets/portus.crt
-      REGISTRY_HTTP_TLS_KEY: /secrets/portus.key
 
       # Portus endpoint
       REGISTRY_NOTIFICATIONS_ENDPOINTS: >
         - name: portus
-          url: https://${MACHINE_FQDN}/v2/webhooks/events
+          url: http://${MACHINE_FQDN}:3000/v2/webhooks/events
           timeout: 2000ms
           threshold: 5
           backoff: 1s
@@ -94,26 +83,8 @@ services:
       - /var/lib/portus/registry:/var/lib/registry
       - ./secrets:/secrets:ro
       - ./registry/config.yml:/etc/docker/registry/config.yml:ro
-      - ./registry/init:/etc/docker/registry/init:ro
     ports:
       - 5000:5000
       - 5001:5001 # required to access debug service
     links:
       - portus:portus
-
-  nginx:
-    image: library/nginx:alpine
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./secrets:/secrets:ro
-      - static:/srv/Portus/public:ro
-    ports:
-      - 80:80
-      - 443:443
-    links:
-      - registry:registry
-      - portus:portus
-
-volumes:
-  static:
-    driver: local

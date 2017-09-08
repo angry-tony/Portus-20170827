@@ -2,6 +2,9 @@
 
 set -x
 
+echo '192.168.147.14    ldap-nfa-01' >> /etc/hosts
+update-ca-certificates
+
 _timeout=150
 _count=0
 _status=0
@@ -11,10 +14,8 @@ export SKIP_MIGRATION=true
 # Use portusctl if available. When installing the RPM, bundle might be in an
 # unknown path otherwise.
 if stat /usr/sbin/portusctl &> /dev/null; then
-    export CATALOG_CRON="60.seconds"
     cmd_prefix="portusctl exec"
 else
-    export CATALOG_CRON="60.seconds"
     cmd_prefix="bundle exec"
 fi
 

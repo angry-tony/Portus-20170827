@@ -43,7 +43,7 @@ delete:
 ldap:
   enabled: true
 
-  hostname: "192.0.220.101"
+  hostname: "192.168.147.14"
   port: 389
 
   # Available options: "plain", "simple_tls" and "starttls". The default is
@@ -132,7 +132,7 @@ registry:
 
 # The FQDN of the machine where Portus is being deployed.
 machine_fqdn:
-  value: "pdr-01"
+  value: "ldap-nfs-01"
 
 # Allow users to have different display names on the web site. This will
 # **not** be the username used by `docker login`. It defaults to false because
