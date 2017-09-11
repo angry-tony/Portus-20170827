@@ -41,7 +41,7 @@ delete:
 # be able to use Portus. Take a look at the documentation of LDAP support in our
 # online docs: http://port.us.org/features/2_LDAP-support.html.
 ldap:
-  enabled: true
+  enabled: false
 
   hostname: "192.168.147.14"
   port: 389
@@ -61,7 +61,7 @@ ldap:
 
   # LDAP credentials used to search for a user.
   authentication:
-    enabled: true
+    enabled: false
     bind_dn: "uid=serviceaccount,ou=it,dc=example,dc=com"
     password: "password"
 
