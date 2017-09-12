@@ -9,6 +9,7 @@ registry/init
 secrets/create-crt.sh
 docker-compose.yml
 
+docker login   image push  .
 
 # SAN 확인
 [root@master-01 certs]# openssl req -in pdr-01.csr -noout -text
