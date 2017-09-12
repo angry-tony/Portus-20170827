@@ -8,3 +8,31 @@ config.yml        crono.file        portus.init.file
 registry/init
 secrets/create-crt.sh
 docker-compose.yml
+
+
+# SAN 확인
+[root@master-01 certs]# openssl req -in pdr-01.csr -noout -text
+[root@master-01 certs]# openssl x509 -in ./pdr-01.crt -text -noout
+       X509v3 extensions:
+            X509v3 Subject Alternative Name:
+                DNS:*.example.com, DNS:auth-pdr-01, DNS:pdr-01, IP Address:192.0.220.105
+
+# ubuntu
+# CLIENT에 curl 사용시 ssl error 않나게하기 위해 ROOT-CA (pdr-01-CA.crt) 복사 
+for i in bootstrap-ldap-nfs-01 pdr-01 master-01 pri-slave-01 pub-slave-01; do ssh $i "rm -rf /etc/pki/ca-trust/source/anchors/*"& done
+
+for i in bootstrap-ldap-nfs-01 pdr-01 master-01 pri-slave-01 pub-slave-01; do ssh $i "ls -l  /etc/pki/ca-trust/source/anchors/*"; done
+
+for i in bootstrap-ldap-nfs-01 pdr-01 master-01 pri-slave-01 pub-slave-01; do ssh $i "update-ca-trust force-enable && update-ca-trust enable && update-ca-trust extract"& done
+
+
+# centos
+for i in bootstrap-ldap-nfs-01 pdr-01 master-01 pri-slave-01 pub-slave-01; do scp pdr-01:/root/Portus/examples/development/compose/portus-CA.crt $i:/etc/pki/ca-trust/source/anchors; done
+
+for i in bootstrap-ldap-nfs-01 pdr-01 master-01 pri-slave-01 pub-slave-01; do ssh $i "ls -l  /etc/pki/ca-trust/source/anchors/*"; done
+
+for i in bootstrap-ldap-nfs-01 pdr-01 master-01 pri-slave-01 pub-slave-01; do ssh $i "update-ca-trust force-enable && update-ca-trust enable && update-ca-trust extract"& done
+
+# UCR (mesos) 내부적으로 사용할 cert 파일 리스트에 root-ca 추가
+
+for i in bootstrap-ldap-nfs-01 pdr-01 master-01 pri-slave-01 pub-slave-01; do cat /etc/pki/ca-trust/source/anchors/portus-CA.crt | ssh $i "cat >> /opt/mesosphere/active/python-requests/lib/python3.5/site-packages/requests/cacert.pem"; done
