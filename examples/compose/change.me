@@ -9,7 +9,8 @@ registry/init
 secrets/create-crt.sh
 docker-compose.yml
 
-docker login   image push  .
+docker login  한 후 다운받은 image 만 push 할 수 있음.
+docker_credencial 이 없는 상태로 다운받은 기존 images 는 push 할 수 없음.
 
 # SAN 확인
 [root@master-01 certs]# openssl req -in pdr-01.csr -noout -text
