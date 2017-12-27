@@ -1,4 +1,27 @@
+#####################################
 
+docker-compose.yml:
+version: '2'  
+services:  
+  samplev2:
+    image: "redis:alpine"
+    extra_hosts:
+       - "outside:172.17.0.1"
+
+
+And since we took advantage of variable substitution in CLI example, I'll show how we can do the same here:
+version: '2'  
+services:  
+  samplev2:
+    image: "redis:alpine"
+    extra_hosts:
+       - "outside:${HOST_IP}"
+
+
+In this example, we don't have an .env file, and HOST_IP is only a shell variable. To become an env var, we need export it first, and then run docker-compose:
+$ bcat@remote:~$ export HOST_IP=$HOST_IP && docker-compose up -d
+
+#####################################
 .env : MACHINE_FQDN=ldap-nfs-01
 
 nginx/nginx.conf : serverhostname
