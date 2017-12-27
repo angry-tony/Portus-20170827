@@ -1,4 +1,26 @@
 #####################################
+We put it in the HOST_IP shell var like so:
+$ HOST_IP=`ip -4 addr show scope global dev docker0 | grep inet | awk '{print \$2}' | cut -d / -f 1`
+
+
+Then we execute docker run with --add-host, using the variable we set, e.g.:
+$ docker run --add-host outside:$HOST_IP --name busybox -it busybox /bin/sh
+
+
+Now, within the container, we can inspect /etc/hosts, we see an extra line has been added:
+bcat@remote:~$ docker run --add-host outside:$HOST_IP --name busybox -it busybox /bin/sh
+
+/ # cat /etc/hosts
+127.0.0.1    localhost  
+::1    localhost ip6-localhost ip6-loopback
+fe00::0    ip6-localnet  
+ff00::0    ip6-mcastprefix  
+ff02::1    ip6-allnodes  
+ff02::2    ip6-allrouters  
+172.17.0.1    outside <---- THIS ONE!  
+172.17.0.3    a8300156a695  
+
+This mechanism also available docker-compose.yml files as the extra_hosts key, like so:
 
 docker-compose.yml:
 version: '2'  
